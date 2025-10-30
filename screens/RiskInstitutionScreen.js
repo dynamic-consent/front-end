@@ -30,15 +30,15 @@ export default function RiskInstitutionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 18, fontWeight: '700', color: '#0b3d2a' },
+  container: { flex: 1, padding: 16, backgroundColor: '#F5F7F6' },
+  title: { fontSize: 18, fontWeight: '700', color: '#0B1215' },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F7F6',
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
-  org: { fontSize: 15, fontWeight: '700', color: '#14532d', marginBottom: 4 },
+  org: { fontSize: 15, fontWeight: '700', color: '#00752F', marginBottom: 4 },
   meta: { fontSize: 13, color: '#6b7280' },
 });

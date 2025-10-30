@@ -3,12 +3,7 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// SVG를 컴포넌트처럼 import하기 위한 설정
-config.transformer = {
-  ...config.transformer,
-  babelTransformerPath: require.resolve('react-native-svg-transformer'),
-};
-config.resolver.assetExts = config.resolver.assetExts.filter(ext => ext !== 'svg');
-config.resolver.sourceExts = [...config.resolver.sourceExts, 'svg'];
+// SVG transformer 비활성화 (transformFile 오류 방지)
+// 대신 react-native-svg를 직접 사용
 
 module.exports = config;
