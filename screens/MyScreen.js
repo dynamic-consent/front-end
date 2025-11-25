@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   View, 
   Text, 
@@ -6,7 +6,8 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   StatusBar,
-  Platform
+  Platform,
+  Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +18,12 @@ import { BellIcon } from '../components/SvgIcons';
 /* API */
 import { userAPI } from '../services/api';
 
+/* Auth Context */
+import { AuthContext } from '../contexts/AuthContext';
+
 export default function MyScreen() {
+  const authContext = useContext(AuthContext);
+  const handleLogout = authContext?.handleLogout || (() => {});
   const [profile, setProfile] = useState(null);
   const [activity, setActivity] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -27,13 +33,62 @@ export default function MyScreen() {
     loadUserData();
   }, []);
 
+  // 날짜 포맷팅 함수
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
+    try {
+      // ISO 8601 형식 또는 Instant 형식 처리
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}.${month}.${day}`;
+    } catch (error) {
+      console.error('날짜 포맷팅 오류:', error);
+      return '';
+    }
+  };
+
+  // 시간 포맷팅 함수
+  const formatTime = (dateString) => {
+    if (!dateString) return '';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      
+      return `${hours}:${minutes}:${seconds}`;
+    } catch (error) {
+      console.error('시간 포맷팅 오류:', error);
+      return '';
+    }
+  };
+
   const loadUserData = async () => {
     try {
       setLoading(true);
       
-      // 프로필 데이터만 가져오기 (환경설정 API는 500 오류로 제외)
+      // 프로필 데이터 가져오기
       const profileData = await userAPI.getProfile();
-      setProfile(profileData);
+      console.log('프로필 데이터:', profileData);
+      
+      // 백엔드 응답을 프론트엔드 형식으로 변환
+      setProfile({
+        displayName: profileData.displayName || '',
+        birthDate: formatDate(profileData.birthDate),
+        englishName: '', // 백엔드에 영문 이름 필드가 없음 (추후 추가 가능)
+        phoneNumber: profileData.phoneNumber || '',
+        email: profileData.email || '',
+        lastLoginAt: profileData.lastLoginAt
+      });
       
       // 환경설정은 Mock 데이터 사용
       setSettings({
@@ -49,10 +104,13 @@ export default function MyScreen() {
         }
       });
       
-      // 활동 정보는 프로필에서 가져오거나 별도 처리
+      // 활동 정보는 프로필에서 가져오기
+      const lastLoginDate = formatDate(profileData.lastLoginAt);
+      const lastLoginTime = formatTime(profileData.lastLoginAt);
+      
       setActivity({
-        lastAccess: '25.08.16',
-        lastAccessTime: '14:42:44',
+        lastAccess: lastLoginDate || '25.08.16',
+        lastAccessTime: lastLoginTime || '14:42:44',
         appVersion: '1.2.1',
         isLatestVersion: true
       });
@@ -61,11 +119,11 @@ export default function MyScreen() {
       
       // 오류 발생 시 기본값 설정
       setProfile({
-        name: '홍길동',
-        birthDate: '2000.05.30',
-        englishName: 'HONG GIL DONG',
-        phone: '010-1234-5678',
-        email: 'gildong@mail.com'
+        displayName: '',
+        birthDate: '',
+        englishName: '',
+        phoneNumber: '',
+        email: ''
       });
       setSettings({
         notifications: {
@@ -155,23 +213,19 @@ export default function MyScreen() {
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>이름</Text>
-              <Text style={styles.infoValue}>{profile?.displayName || '홍길동'}</Text>
+              <Text style={styles.infoValue}>{profile?.displayName || '-'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>생년월일</Text>
-              <Text style={styles.infoValue}>{profile?.birthDate || '2000.05.30'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>영문 이름</Text>
-              <Text style={styles.infoValue}>{profile?.englishName || 'HONG GIL DONG'}</Text>
+              <Text style={styles.infoValue}>{profile?.birthDate || '-'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>휴대폰 번호</Text>
-              <Text style={styles.infoValue}>{profile?.phoneNumber || '010-1234-5678'}</Text>
+              <Text style={styles.infoValue}>{profile?.phoneNumber || '-'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>이메일</Text>
-              <Text style={styles.infoValue}>{profile?.email || 'gildong@mail.com'}</Text>
+              <Text style={styles.infoValue}>{profile?.email || '-'}</Text>
             </View>
           </View>
         </View>
@@ -241,7 +295,25 @@ export default function MyScreen() {
 
         {/* Footer Links */}
         <View style={styles.footerLinks}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            Alert.alert(
+              '로그아웃',
+              '정말 로그아웃 하시겠습니까?',
+              [
+                {
+                  text: '취소',
+                  style: 'cancel'
+                },
+                {
+                  text: '로그아웃',
+                  style: 'destructive',
+                  onPress: () => {
+                    handleLogout();
+                  }
+                }
+              ]
+            );
+          }}>
             <Text style={styles.footerLink}>로그아웃</Text>
           </TouchableOpacity>
           <Text style={styles.footerDivider}>|</Text>

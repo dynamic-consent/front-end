@@ -55,7 +55,7 @@ const notices = [
     date: '25.07.18',
     company: '인크루트',
     title: '개인정보 처리 방침 개정 안내',
-    description: '안녕하세요, 인크루트입니다. 항상 인인크루트를 이용해 주시...',
+    description: '안녕하세요, 인크루트입니다. 항상 인크루트를 이용해 주시...',
     icon: '인',
     iconColor: '#FF9800'
   },
@@ -73,13 +73,13 @@ const notices = [
     date: '25.05.09',
     company: '알바몬',
     title: '유심 관련 개인정보 유출 가능성 통지',
-    description: '※이 문자는 개인정보보호위원회의 심의/외경(5월 2일에 따른..',
+    description: '※이 문자는 개인정보보호위원회의 심의/의결(5월 2일)에 따른...',
     icon: 'T',
     iconColor: '#2196F3'
   }
 ];
 
-function NoticeItem({ item, onPress }) {
+function NoticeItem({ item, onPress, isLast }) {
   const getCompanyImage = (company) => {
     if (company.includes('인크루트')) {
       return require('../assets/icons/organizations/incruit.png');
@@ -96,13 +96,17 @@ function NoticeItem({ item, onPress }) {
   const iconImage = getCompanyImage(item.company);
 
   return (
-    <TouchableOpacity style={styles.noticeItem} activeOpacity={0.7} onPress={() => onPress(item)}>
+    <TouchableOpacity 
+      style={[styles.noticeItem, isLast && styles.lastItem]} 
+      activeOpacity={0.7} 
+      onPress={() => onPress(item)}
+    >
       <View style={styles.itemLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: item.iconColor }]}>    
+        <View style={[styles.iconContainer, { backgroundColor: item.iconColor || '#FF9800' }]}>    
           {iconImage ? (
-            <Image source={iconImage} style={{ width: 32, height: 32, borderRadius: 6 }} resizeMode="contain" />
+            <Image source={iconImage} style={{ width: 48, height: 48, borderRadius: 6 }} resizeMode="contain" />
           ) : (
-            <Text style={styles.iconText}>{item.icon}</Text>
+            <Text style={styles.iconText}>{item.icon || '인'}</Text>
           )}
         </View>
         <View style={styles.itemContent}>
@@ -120,84 +124,40 @@ function NoticeItem({ item, onPress }) {
 
 export default function NoticeScreen({ navigation }) {
   const [sortBy, setSortBy] = useState('최신순');
-  const [notices, setNotices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // API에서 공지사항 데이터 로드
-  useEffect(() => {
-    loadNotices();
-  }, []);
-
-  const loadNotices = async () => {
-    try {
-      setLoading(true);
-      
-      // 직접 API 호출
-      const response = await fetch('http://192.168.0.9:8080/api/v1/notices?page=0&size=20&sort=createdAt,desc', {
-        headers: { 'Content-Type': 'application/json', 'X-UserId': 'user1' }
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('공지사항 목록 API 성공:', result);
-        
-        // 백엔드 데이터를 화면 형식으로 변환
-        const notices = result.content || result;
-        if (Array.isArray(notices)) {
-          const formattedNotices = notices.map(notice => ({
-            id: notice.id,
-            date: formatDate(notice.createdAt),
-            company: notice.category || '시스템',
-            title: notice.title,
-            description: notice.content?.substring(0, 50) + '...',
-            icon: getCompanyIcon(notice.category),
-            iconColor: getCompanyColor(notice.category)
-          }));
-          setNotices(formattedNotices);
-        } else {
-          throw new Error('공지사항 데이터가 배열이 아닙니다');
-        }
-      } else {
-        throw new Error(`HTTP ${response.status}`);
-      }
-    } catch (err) {
-      console.error('공지사항 로드 오류:', err);
-      setError(handleAPIError(err));
-      // 에러 발생 시 기본 데이터 사용
-      setNotices([
-        {
-          id: 1,
-          date: '25.07.18',
-          company: '인크루트',
-          title: '개인정보 처리 방침 개정 안내',
-          description: '안녕하세요, 인크루트입니다. 항상 언크루트를 이용해 주시...',
-          icon: '인',
-          iconColor: '#FF9800'
-        },
-        {
-          id: 2,
-          date: '25.05.01',
-          company: '알바몬',
-          title: '개인정보 유출 관련 안내 및 사과',
-          description: '먼저 알바몬을 믿고 이용해주시는 모든 회원 여러분께 진심...',
-          icon: 'ㅇ',
-          iconColor: '#FF9800'
-        },
-        {
-          id: 3,
-          date: '25.05.09',
-          company: '알바몬',
-          title: '유심 관련 개인정보 유출 가능성 통지',
-          description: '※이 문자는 개인정보보호위원회의 심의/외경(5월 2일에 따른..',
-          icon: 'T',
-          iconColor: '#2196F3'
-        }
-      ]);
-    } finally {
-      setLoading(false);
+  
+  // 기본 데이터를 바로 사용
+  const defaultNotices = [
+    {
+      id: 1,
+      date: '25.07.18',
+      company: '인크루트',
+      title: '개인정보 처리 방침 개정 안내',
+      description: '안녕하세요, 인크루트입니다. 항상 인크루트를 이용해 주시...',
+      icon: '인',
+      iconColor: '#FF9800'
+    },
+    {
+      id: 2,
+      date: '25.05.01',
+      company: '알바몬',
+      title: '개인정보 유출 관련 안내 및 사과',
+      description: '먼저 알바몬을 믿고 이용해주시는 모든 회원 여러분께 진심...',
+      icon: 'ㅇ',
+      iconColor: '#FF9800'
+    },
+    {
+      id: 3,
+      date: '25.05.09',
+      company: 'SKT 텔레콤',
+      title: '유심 관련 개인정보 유출 가능성 통지',
+      description: '※이 문자는 개인정보보호위원회의 심의/의결(5월 2일)에 따른...',
+      icon: 'T',
+      iconColor: '#2196F3'
     }
-  };
+  ];
+  
+  const [notices, setNotices] = useState(defaultNotices);
+  const [loading, setLoading] = useState(false);
 
   const handleNoticePress = (item) => {
     navigation.navigate('NoticeDetail', { noticeId: item.id });
@@ -239,18 +199,16 @@ export default function NoticeScreen({ navigation }) {
         {/* Content */}
         <View style={styles.content}>
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#00752F" />
-                <Text style={styles.loadingText}>공지사항을 불러오는 중...</Text>
-              </View>
-            ) : (
-              <View style={styles.listContainer}>
-                {notices.map((item) => (
-                  <NoticeItem key={item.id} item={item} onPress={handleNoticePress} />
-                ))}
-              </View>
-            )}
+            <View style={styles.listContainer}>
+              {notices.map((item, index) => (
+                <NoticeItem 
+                  key={item.id} 
+                  item={item} 
+                  onPress={handleNoticePress}
+                  isLast={index === notices.length - 1}
+                />
+              ))}
+            </View>
           </ScrollView>
         </View>
       </SafeAreaView>
@@ -309,8 +267,9 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     backgroundColor: '#F5F7F6',
-    borderRadius: 16,
+    borderRadius: 12,
     paddingVertical: 8,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -319,7 +278,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow: 'hidden',
   },
   noticeItem: {
     flexDirection: 'row',
@@ -327,7 +285,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#E5E7EB',
+  },
+  lastItem: {
+    borderBottomWidth: 0,
   },
   itemLeft: {
     flexDirection: 'row',
@@ -335,15 +296,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
   },
   iconText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
@@ -353,12 +314,17 @@ const styles = StyleSheet.create({
   dateCompanyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   dateText: {
     fontSize: 12,
     color: '#6B7280',
     marginRight: 8,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#00752F',
   },
   companyName: {
     fontSize: 14,
@@ -369,8 +335,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#0B1215',
-    marginBottom: 6,
-    lineHeight: 20,
+    marginBottom: 4,
+    lineHeight: 22,
   },
   descriptionText: {
     fontSize: 13,

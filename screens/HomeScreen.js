@@ -9,6 +9,7 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,30 @@ import NoticeItem from '../components/NoticeItem';
 import { BellIcon } from '../components/SvgIcons';
 import Svg, { Path } from 'react-native-svg';
 import { homeAPI, userAPI } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
+
+const RISK_WARNING_COLOR = '#FF8A00';
+const RISK_WARNING_BG = '#F5F7F6';
+const RISK_ICON_BG = '#F5F7F6';
+const PRIMARY_GREEN = '#00752F';
+
+// 회사명에 따른 이미지 매핑 함수
+const getCompanyImage = (company) => {
+  if (company.includes('카카오톡')) {
+    return require('../assets/icons/organizations/kakaotalk.png');
+  }
+  if (company.includes('인크루트')) {
+    return require('../assets/icons/organizations/incruit.png');
+  }
+  if (company.includes('알바몬')) {
+    return require('../assets/icons/organizations/albamon.png');
+  }
+  if (company.includes('SKT')) {
+    return require('../assets/icons/organizations/skt.png');
+  }
+  return null;
+};
 
 // 카테고리 아이콘들 (원본 SVG 내용을 react-native-svg로 구현)
 const FinanceIcon = ({ width = 24, height = 24 }) => (
@@ -137,6 +162,17 @@ const EtcIcon = ({ width = 24, height = 24 }) => (
   </Svg>
 );
 
+const GLOBAL_CHANGE_HISTORY_KEY = 'globalConsentChangeHistory';
+const getUserScopedHistoryKey = async () => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    return `${GLOBAL_CHANGE_HISTORY_KEY}:${userId || 'guest'}`;
+  } catch (error) {
+    console.log('사용자 ID 조회 실패:', error);
+    return `${GLOBAL_CHANGE_HISTORY_KEY}:guest`;
+  }
+};
+
 /* 재사용 컴포넌트 */
 function CategoryItem({ label, IconComponent, onPress }) {
   return (
@@ -165,6 +201,8 @@ export default function HomeScreen({ navigation }) {
   const [userProfile, setUserProfile] = useState(null);
   const [homeSummary, setHomeSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [recentChanges, setRecentChanges] = useState([]);
+  const isFocused = useIsFocused();
 
   const handleCategoryPress = (category) => {
     // 기관 탭으로 이동하면서 선택된 카테고리 전달
@@ -187,6 +225,12 @@ export default function HomeScreen({ navigation }) {
     loadBackendData();
   }, []);
 
+  useEffect(() => {
+    if (isFocused) {
+      loadRecentChanges();
+    }
+  }, [isFocused]);
+
   const loadBackendData = async () => {
     try {
       setLoading(true);
@@ -208,9 +252,25 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const loadRecentChanges = async () => {
+    try {
+      const historyKey = await getUserScopedHistoryKey();
+      const stored = await AsyncStorage.getItem(historyKey);
+      const parsed = stored ? JSON.parse(stored) : [];
+      setRecentChanges(parsed);
+    } catch (error) {
+      console.error('최근 동의 변경 내역 로드 오류:', error);
+      setRecentChanges([]);
+    }
+  };
+
   const toggleExpanded = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpanded((v) => !v);
+  };
+
+  const handleNotificationPress = () => {
+    navigation.navigate('Notifications');
   };
 
   return (
@@ -229,42 +289,48 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.username}>
               {loading ? '로딩 중...' : (userProfile?.displayName || '홍길동') + '님'}
             </Text>
-          <TouchableOpacity style={styles.notificationIcon}>
+          <TouchableOpacity style={styles.notificationIcon} onPress={handleNotificationPress}>
             <BellIcon width={24} height={24} />
           </TouchableOpacity>
           </View>
 
           {/* 위험도 카드 */}
           <View style={styles.warningCard}>
-            <View style={styles.riskRow}>
-              <View style={styles.riskTexts}>
-                <Text style={styles.riskLine1}>
-                  <Text style={styles.riskEmphRed}>
-                    {loading ? '로딩 중...' : (homeSummary?.totalConsents || 0) + '개 기관'}
-                  </Text> 에서 동의서가 관리되고 있어요
-                </Text>
-                <Text style={styles.riskLine2}>
-                  활성 동의서: <Text style={styles.riskEmphAmber}>
-                    {loading ? '로딩 중...' : (homeSummary?.activeConsents || 0) + '개'}
+              <View style={styles.riskHeader}>
+                <View style={styles.riskTexts}>
+                  <Text style={styles.riskLine1}>
+                    <Text style={styles.riskEmphAmber}>
+                      {loading ? '로딩 중...' : (homeSummary?.totalConsents || 4) + '개 기관'}
+                    </Text>
+                    에서
                   </Text>
-                </Text>
+                  <Text style={[styles.riskLine1, { marginBottom: 0 }]}>
+                    위험도가 감지되었어요
+                  </Text>
+                </View>
+                <View style={styles.riskIconContainer}>
+                  <Image
+                    source={require('../assets/icons/risk/risk2.png')}
+                    style={styles.riskIcon}
+                    resizeMode="contain"
+                  />
+                </View>
               </View>
-              <View style={styles.riskBadge}>
-                <Ionicons name="lock-closed" size={24} color="#fff" />
-              </View>
-            </View>
 
             <TouchableOpacity
               style={[
                 styles.outlineButton,
-                { backgroundColor: isCheckPressed ? '#00752F' : '#F5F7F6', borderColor: '#00752F' },
+                { 
+                  backgroundColor: isCheckPressed ? PRIMARY_GREEN : '#FFFFFF', 
+                  borderColor: PRIMARY_GREEN 
+                },
               ]}
               onPressIn={() => setIsCheckPressed(true)}
               onPressOut={() => setIsCheckPressed(false)}
               onPress={() => navigation.navigate('RiskInstitution')}
               activeOpacity={0.9}
             >
-              <Text style={[styles.outlineButtonText, { color: isCheckPressed ? '#FFFFFF' : '#14532D' }]}>
+              <Text style={[styles.outlineButtonText, { color: isCheckPressed ? '#FFFFFF' : PRIMARY_GREEN }]}>
                 해당 기관 확인하기 {'\u203A'}
               </Text>
             </TouchableOpacity>
@@ -328,10 +394,24 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: 20, marginBottom: 20 }}>
-            <ConsentCard date="25.07.18" company="지그재그" description="약관 변경 동의" />
-            <ConsentCard date="25.06.05" company="APPLE" description="Apple 미디어 서비스 이용 약관 변경" />
+          <View style={styles.recentChangeContent}>
+            {recentChanges.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {recentChanges.map((item) => (
+                  <ConsentCard
+                    key={item.id}
+                    date={item.displayDate || ''}
+                    company={item.orgName || '알 수 없음'}
+                    description={item.description || ''}
+                  />
+                ))}
           </ScrollView>
+            ) : (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyCardText}>아직 동의 변경 내역이 없습니다.</Text>
+              </View>
+            )}
+          </View>
 
           {/* 공지사항 */}
           <View style={styles.sectionHeader}>
@@ -345,9 +425,28 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           <View style={styles.noticeList}>
-            <NoticeItem date="25.07.18" logo="🟠" company="인크루트" description="개인정보 처리 방침 개정 안내" />
-            <NoticeItem date="25.05.01" logo="🟧" company="알바몬" description="개인정보 유출 관련 안내 및 사과" />
-            <NoticeItem date="25.05.09" logo="🟦" company="SKT 텔레콤" description="유심 관련 개인정보 유출 가능성 통지" />
+            <NoticeItem 
+              date="25.11.12" 
+              logo={getCompanyImage('카카오톡') || "💬"} 
+              company="카카오톡" 
+              description="친구위치 기능 업데이트 - 무제한 위치공유 확대"
+              onPress={() => navigation.navigate('NoticeDetail', { noticeId: 1 })}
+            />
+            <NoticeItem 
+              date="25.05.01" 
+              logo={getCompanyImage('알바몬') || "🟧"} 
+              company="알바몬" 
+              description="개인정보 유출 관련 안내 및 사과"
+              onPress={() => navigation.navigate('NoticeDetail', { noticeId: 2 })}
+            />
+            <NoticeItem 
+              date="25.05.09" 
+              logo={getCompanyImage('SKT 텔레콤') || "🟦"} 
+              company="SKT 텔레콤" 
+              description="유심 관련 개인정보 유출 가능성 통지"
+              onPress={() => navigation.navigate('NoticeDetail', { noticeId: 3 })}
+              showDivider={false}
+            />
           </View>
 
         </ScrollView>
@@ -392,57 +491,72 @@ const styles = StyleSheet.create({
 
   /* 위험도 카드 */
   warningCard: {
-    backgroundColor: '#f3f7f5',
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: RISK_WARNING_BG,
+    padding: 20,
+    borderRadius: 16,
     marginHorizontal: 20,
     marginBottom: 24,
+    borderWidth: 2,
+    borderColor: RISK_WARNING_COLOR,
+    shadowColor: RISK_WARNING_COLOR,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  riskRow: {
+  riskHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    marginBottom: 16,
   },
   riskTexts: {
     flex: 1,
-    paddingRight: 12,
+    marginRight: 16,
+    flexShrink: 1,
   },
   riskLine1: {
-    fontSize: 13,
+    fontSize: 16,
     color: '#0B1215',
+    lineHeight: 24,
+    fontWeight: '500',
     marginBottom: 4,
+    flexShrink: 1,
   },
   riskLine2: {
-    fontSize: 13,
+    fontSize: 16,
     color: '#0B1215',
-  },
-  riskEmphRed: {
-    color: '#e11d48',
-    fontWeight: '800',
+    lineHeight: 24,
+    fontWeight: '500',
   },
   riskEmphAmber: {
-    color: '#eab308',
+    color: RISK_WARNING_COLOR,
     fontWeight: '800',
+    fontSize: 18,
   },
-  riskBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#16a34a',
-    alignItems: 'center',
+  riskIconContainer: {
     justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  riskIcon: {
+    width: 52,
+    height: 52,
   },
   outlineButton: {
-    marginTop: 12,
+    marginTop: 0,
     borderWidth: 1.5,
-    borderColor: '#00752F',
+    borderColor: PRIMARY_GREEN,
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: '#F5F7F6',
+    backgroundColor: '#FFFFFF',
   },
   outlineButtonText: {
-    color: '#00752F',
+    color: PRIMARY_GREEN,
     fontWeight: '700',
   },
 
@@ -519,6 +633,26 @@ const styles = StyleSheet.create({
   moreText: {
     color: '#6b7280',
     fontSize: 13,
+  },
+
+  recentChangeContent: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+
+  emptyCard: {
+    backgroundColor: '#F5F7F6',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  emptyCardText: {
+    fontSize: 14,
+    color: '#6B7280',
   },
 
   /* 최근 동의 변경 내역 카드 */

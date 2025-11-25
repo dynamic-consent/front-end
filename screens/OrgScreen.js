@@ -11,6 +11,7 @@ import {
   Image,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -275,28 +276,47 @@ function OrgCell({ name, onPress }) {
   );
 }
 
+const LAST_CATEGORY_KEY = 'OrgScreen:lastCategory';
+
 export default function OrgScreen({ route, navigation }) {
   const [selected, setSelected] = useState('금융');
-  const [lastHomeCategory, setLastHomeCategory] = useState(null);
   const data = useMemo(() => ORGS.filter(o => o.category === selected), [selected]);
+
+  // 저장된 마지막 카테고리 불러오기
+  useEffect(() => {
+    let isMounted = true;
+    const loadLastCategory = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(LAST_CATEGORY_KEY);
+        if (saved && CATEGORIES.includes(saved) && isMounted) {
+          setSelected(saved);
+        }
+      } catch (error) {
+        console.log('기관 카테고리 로드 실패:', error);
+      }
+    };
+
+    loadLastCategory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 카테고리 변경 시 저장
+  useEffect(() => {
+    AsyncStorage.setItem(LAST_CATEGORY_KEY, selected).catch((error) => {
+      console.log('기관 카테고리 저장 실패:', error);
+    });
+  }, [selected]);
 
   // 컴포넌트가 포커스를 받을 때마다 route params 확인
   useFocusEffect(
     React.useCallback(() => {
-      console.log('OrgScreen: 포커스 받음, route.params:', route?.params);
-      
-      if (route?.params?.selectedCategory) {
-        const newCategory = route.params.selectedCategory;
-        console.log('OrgScreen: 새로운 카테고리:', newCategory, '마지막 홈 카테고리:', lastHomeCategory);
-        
-        // 홈에서 새로운 카테고리를 클릭한 경우에만 변경
-        if (newCategory !== lastHomeCategory) {
-          console.log('OrgScreen: 카테고리 변경됨:', newCategory);
-          setSelected(newCategory);
-          setLastHomeCategory(newCategory);
-        }
+      if (route?.params?.selectedCategory && CATEGORIES.includes(route.params.selectedCategory)) {
+        setSelected(route.params.selectedCategory);
       }
-    }, [route?.params?.selectedCategory, lastHomeCategory])
+    }, [route?.params?.selectedCategory])
   );
 
   return (
@@ -361,7 +381,7 @@ export default function OrgScreen({ route, navigation }) {
                 <OrgCell 
                   name={item.name} 
                   onPress={() => {
-                    navigation.navigate('OrgDetail', { orgName: item.name });
+                    navigation.navigate('OrgDetail', { orgName: item.name, selectedCategory: selected });
                   }} 
                 />
               )}

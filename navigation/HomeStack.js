@@ -5,6 +5,7 @@ import NoticeScreen from '../screens/NoticeScreen';
 import NoticeDetailScreen from '../screens/NoticeDetailScreen';
 import RiskInstitutionScreen from '../screens/RiskInstitutionScreen';
 import RecentChangeScreen from '../screens/RecentChangeScreen';
+import NotificationScreen from '../screens/NotificationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,6 +17,7 @@ export default function HomeStack() {
       <Stack.Screen name="NoticeDetail" component={NoticeDetailScreen} />
       <Stack.Screen name="RiskInstitution" component={RiskInstitutionScreen} />
       <Stack.Screen name="RecentChanges" component={RecentChangeScreen} />
+      <Stack.Screen name="Notifications" component={NotificationScreen} />
     </Stack.Navigator>
   );
 }

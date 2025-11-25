@@ -1,19 +1,41 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { authAPI } from '../services/api';
 
 export default function LoginScreen({ navigation }) {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    // 로그인 로직 구현
-    if (navigation && navigation.replace) {
-      navigation.replace('MainTabs');
+  const handleLogin = async () => {
+    if (!id || !password) {
+      Alert.alert('입력 오류', '아이디와 비밀번호를 입력해주세요.');
+      return;
+    }
+
+    try {
+      // 백엔드 로그인 API 호출
+      const result = await authAPI.login(id, password);
+      
+      console.log('로그인 성공:', result);
+      
+      // 로그인 성공 시 메인 화면으로 이동
+      if (navigation && navigation.replace) {
+        navigation.replace('MainTabs');
+      }
+    } catch (error) {
+      console.error('로그인 오류:', error);
+      Alert.alert(
+        '로그인 실패',
+        error.message || '로그인 중 오류가 발생했습니다. 다시 시도해주세요.'
+      );
     }
   };
 
   const handleSignup = () => {
-    // 회원가입 로직 구현
+    // 회원가입 화면으로 이동
+    if (navigation && navigation.navigate) {
+      navigation.navigate('Signup');
+    }
   };
 
   return (
@@ -68,7 +90,7 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#C8E6D1',
+    backgroundColor: '#E1E9E4',
     justifyContent: 'center',
     alignItems: 'center',
   },

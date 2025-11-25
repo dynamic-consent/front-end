@@ -1,57 +1,88 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   ScrollView, 
   TouchableOpacity,
-  StatusBar 
+  StatusBar,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 
 /* 공통 아이콘 */
 import { BellIcon } from '../components/SvgIcons';
+import { getOrgIconInfo } from '../utils/orgIconLoader';
 
-const consentChanges = [
-  {
-    id: 1,
-    date: '25.08.19',
-    serviceName: '네이버카페',
-    description: '이용약관 변경 내역',
-    icon: '☕',
-    iconColor: '#4CAF50'
-  },
-  {
-    id: 2,
-    date: '25.08.18',
-    serviceName: 'APPLE',
-    description: 'Apple 미디어 서비스 이용 약관 변경',
-    icon: '🍎',
-    iconColor: '#000000'
-  },
-  {
-    id: 3,
-    date: '25.08.17',
-    serviceName: '알바몬',
-    description: '유심 관련 개인정보 유출 가능성 통지',
-    icon: '📄',
-    iconColor: '#2196F3'
+const GLOBAL_CHANGE_HISTORY_KEY = 'globalConsentChangeHistory';
+const getUserScopedHistoryKey = async () => {
+  try {
+    const userId = await AsyncStorage.getItem('userId');
+    return `${GLOBAL_CHANGE_HISTORY_KEY}:${userId || 'guest'}`;
+  } catch (error) {
+    console.log('사용자 ID 조회 실패:', error);
+    return `${GLOBAL_CHANGE_HISTORY_KEY}:guest`;
   }
-];
+};
+
+const iconPalette = ['#4CAF50', '#00752F', '#1E88E5', '#F97316', '#8B5CF6'];
+
+const getFallbackIcon = (orgName) => {
+  const letter = orgName?.[0]?.toUpperCase() || '동';
+  const color = iconPalette[Math.abs(letter.charCodeAt(0)) % iconPalette.length];
+  return { letter, color };
+};
 
 function ConsentChangeItem({ item }) {
+  const iconInfo = getOrgIconInfo(item?.orgName);
+  const fallbackIcon = getFallbackIcon(item?.orgName);
+
+  const renderIcon = () => {
+    if (iconInfo?.logoType === 'image') {
+      return (
+        <Image 
+          source={iconInfo.imageSource} 
+          style={styles.iconImage} 
+          resizeMode="contain" 
+        />
+      );
+    }
+
+    if (iconInfo?.logoType === 'svg') {
+      const IconComponent = iconInfo.logoComponent;
+      return (
+        <View style={styles.iconSvgWrapper}>
+          <IconComponent width={24} height={24} />
+        </View>
+      );
+    }
+
+    return (
+      <View 
+        style={[
+          styles.iconCircle, 
+          { backgroundColor: fallbackIcon.color }
+        ]}
+      >
+        <Text style={styles.iconText}>{fallbackIcon.letter}</Text>
+      </View>
+    );
+  };
+
   return (
     <TouchableOpacity style={styles.listItem} activeOpacity={0.7}>
       <View style={styles.itemLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: item.iconColor }]}>
-          <Text style={styles.iconText}>{item.icon}</Text>
+        <View style={styles.iconContainer}>
+          {renderIcon()}
         </View>
         <View style={styles.itemContent}>
-          <Text style={styles.dateText}>{item.date}</Text>
-          <Text style={styles.serviceName}>{item.serviceName}</Text>
-          <Text style={styles.description}>{item.description}</Text>
+          <Text style={styles.dateText}>{item.displayDate || '-'}</Text>
+          <Text style={styles.serviceName}>{item.orgName || '알 수 없음'}</Text>
+          <Text style={styles.description}>{item.description || ''}</Text>
         </View>
       </View>
       <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
@@ -60,6 +91,35 @@ function ConsentChangeItem({ item }) {
 }
 
 export default function RecentChangeScreen({ navigation }) {
+  const [consentChanges, setConsentChanges] = useState([]);
+  const isFocused = useIsFocused();
+
+  const handleBack = () => {
+    if (navigation?.canGoBack?.()) {
+      navigation.goBack();
+    } else {
+      navigation?.navigate?.('Home');
+    }
+  };
+
+  const loadConsentChanges = async () => {
+    try {
+      const historyKey = await getUserScopedHistoryKey();
+      const stored = await AsyncStorage.getItem(historyKey);
+      const parsed = stored ? JSON.parse(stored) : [];
+      setConsentChanges(parsed);
+    } catch (error) {
+      console.log('최근 동의 변경 내역 로드 실패:', error);
+      setConsentChanges([]);
+    }
+  };
+
+  useEffect(() => {
+    if (isFocused) {
+      loadConsentChanges();
+    }
+  }, [isFocused]);
+
   return (
     <LinearGradient
       style={styles.bg}
@@ -75,7 +135,7 @@ export default function RecentChangeScreen({ navigation }) {
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={handleBack}
           >
             <Ionicons name="chevron-back" size={24} color="#374151" />
           </TouchableOpacity>
@@ -87,6 +147,7 @@ export default function RecentChangeScreen({ navigation }) {
 
         {/* Content */}
         <View style={styles.content}>
+          {consentChanges.length > 0 ? (
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             <View style={styles.listContainer}>
               {consentChanges.map((item) => (
@@ -94,6 +155,12 @@ export default function RecentChangeScreen({ navigation }) {
               ))}
             </View>
           </ScrollView>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>아직 변경된 동의 내역이 없습니다.</Text>
+              <Text style={styles.emptySubtitle}>기관 상세 화면에서 동의를 변경하면 이곳에 기록됩니다.</Text>
+            </View>
+          )}
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -170,6 +237,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
   },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconSvgWrapper: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconImage: {
+    width: 32,
+    height: 32,
+  },
   iconText: {
     fontSize: 20,
   },
@@ -190,6 +274,28 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 14,
     color: '#0B1215',
+    lineHeight: 20,
+  },
+  emptyContainer: {
+    backgroundColor: '#F5F7F6',
+    borderRadius: 16,
+    paddingVertical: 40,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0B1215',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
     lineHeight: 20,
   },
 });

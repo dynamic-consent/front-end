@@ -1,15 +1,20 @@
 // components/NoticeItem.js
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 
 export default function NoticeItem({
   date,
-  logo,          // 이모지 or 이미지 대신 Text로 표시 중
+  logo,          // 이모지 or 이미지 소스
   company,
   description,
   showDivider = true, // 마지막 항목이면 false로 넘기면 밑줄 안나옴(옵션)
+  onPress,       // 클릭 이벤트 핸들러
 }) {
-  return (
+  // logo가 이미지 소스인지 확인 (require()로 전달된 경우)
+  // require()는 숫자(리소스 ID) 또는 객체를 반환할 수 있음
+  const isImageSource = logo && (typeof logo === 'number' || (typeof logo === 'object' && logo.uri !== undefined));
+
+  const content = (
     <View
       style={[
         styles.container,
@@ -18,7 +23,11 @@ export default function NoticeItem({
     >
       {/* 좌측 로고 */}
       <View style={styles.logoWrap}>
-        <Text style={styles.logo}>{logo}</Text>
+        {isImageSource ? (
+          <Image source={logo} style={styles.logoImage} resizeMode="contain" />
+        ) : (
+          <Text style={styles.logo}>{logo}</Text>
+        )}
       </View>
 
       {/* 우측 텍스트 영역 */}
@@ -31,6 +40,16 @@ export default function NoticeItem({
       </View>
     </View>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return content;
 }
 
 const styles = StyleSheet.create({
@@ -44,11 +63,18 @@ const styles = StyleSheet.create({
   // 로고(이모지/아이콘)
   logoWrap: {
     width: 34,
+    height: 34,
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   logo: {
     fontSize: 22,
+  },
+  logoImage: {
+    width: 34,
+    height: 34,
+    borderRadius: 6,
   },
 
   // 첫 줄: 날짜 + 회사명

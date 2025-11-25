@@ -19,37 +19,42 @@ import { BellIcon } from '../components/SvgIcons';
 const noticeDetailData = {
   1: {
     id: 1,
-    date: '25.07.18',
-    company: '인크루트',
-    title: '개인정보 처리 방침 개정 안내',
-    icon: '인',
-    iconColor: '#FF9800',
-    content: `안녕하세요, 인크루트입니다.
+    date: '25.11.12',
+    company: '카카오톡',
+    title: '[개인정보 공지] 카카오톡 친구위치 기능 업데이트 - 무제한 위치공유 확대에 따른 주의사항',
+    icon: '톡',
+    iconColor: '#FEE500',
+    content: `안녕하세요, 동의 ON입니다.
 
-항상 인크루트를 이용해 주시는 회원 여러분께 감사드리며, 개인정보 처리 방침이 개정되어 안내드립니다.
+카카오는 2025년 11월 12일 카카오톡과 카카오맵에서 친구위치 기능을 개편했습니다. 이용자분들의 개인정보 보호와 안전한 서비스 이용을 위해 주요 변경사항과 함께 위치공유 기능 사용법 및 설정 방법을 안내드립니다.
 
-1. 개정항목
-┌─────────────────┬─────────────────────────────┐
-│ 목차            │ 개정내용                    │
-├─────────────────┼─────────────────────────────┤
-│ 개인정보 수집   │ 개인정보 수집 및 이용 현황  │
-│ 및 이용 현황    │ 상세 내용 추가              │
-├─────────────────┼─────────────────────────────┤
-│ 개인정보 제3자  │ 제3자 제공에 관한 사항      │
-│ 제공에 관한 사항│ 상세 내용 추가              │
-└─────────────────┴─────────────────────────────┘
+## 주요 변경사항
 
-2. 시행일
-• 사전 공지일: 2025년 8월 20일
-• 개정 시행일: 2025년 8월 27일
+- 기존: 친구와의 위치공유 시간이 최대 6시간으로 제한
+- 변경: 시간 제한 없이 무제한 실시간 위치공유 가능 (상호 동의 시)
+- 친구위치 기능은 카카오톡과 카카오맵에서 연동되어 실시간 위치 확인이 가능하며, 최대 10개 그룹까지 참여할 수 있습니다.
 
-3. 이의 제기 및 관련 문의
-• 개정된 개인정보 처리 방침에 동의하지 않으시는 경우, 회원 탈퇴를 요청하실 수 있습니다.
-• 시행일까지 별도의 거부 의사표시를 하지 않으시면 개정된 방침에 동의한 것으로 간주됩니다.
-• 기타 문의사항이 있으시면 고객센터(1588-6577)로 연락해 주시기 바랍니다.
+## 위치공유 기능 사용법
 
-앞으로도 더 나은 서비스 제공을 위해 항상 최선을 다하겠습니다.
-감사합니다.`
+- 카카오톡 채팅방의 '+' 버튼 메뉴 또는 카카오맵 앱에서 '친구위치' 기능을 실행할 수 있습니다.
+- 처음 이용 시 위치정보 제공에 대한 동의 절차를 거치며, 카카오맵 로그인과 위치 권한(항상 허용, 정확한 위치) 설정이 필요합니다.
+- 위치공유 그룹 이름을 정하고 초대 메시지를 보내 친구가 수락하면 위치공유가 시작됩니다.
+- 위치공유는 모르는 사람에게 초대 메시지를 보낼 수 없으며, 오픈채팅방 및 100명 이상 단체방에서는 사용할 수 없습니다.
+- 만 14세 미만 이용자는 부모 동의가 필요합니다.
+
+## 위치공유 기능 끄기 및 숨기기 방법
+
+- 잠깐 숨기기: 카카오맵 앱에서 '내 위치 숨기기' 기능을 활성화하면 설정된 시간 동안 위치가 지도에 표시되지 않습니다. 필요 시 바로 숨기거나 최대 1시간까지 설정 가능합니다.
+- 그룹 나가기(종료하기): 더 이상 위치공유를 원치 않을 경우, 카카오맵 '더보기' 메뉴에서 '그룹 나가기'를 선택하면 해당 위치공유 그룹에서 즉시 제외됩니다. '모든 친구위치 그룹 나가기'로 모든 위치공유 그룹에서 나갈 수도 있습니다.
+- 카카오톡 전체 위치정보 동의 철회 시 카카오맵 로그인이 제한되며, 기존 그룹은 유지되니 잠시 사용 안 할 땐 숨기기를 활용하는 것이 효과적입니다.
+
+## 개인정보 보호 주의사항
+
+- 본 기능은 상호 동의 기반으로 운영되며 사용자의 명시적 동의 없이는 위치정보가 공유되지 않습니다.
+- 원치 않는 위치공유 요청은 거절하거나 무시할 수 있습니다.
+- 위치공유에 동의하면 실시간으로 현재 위치가 상대방에게 노출됩니다.
+- 업무, 가족, 연인 관계에서 과도한 위치공유 강요를 받지 않도록 주의 바랍니다.
+- 미성년자(만 14세 미만)는 부모 동의가 반드시 필요합니다.`
   },
   2: {
     id: 2,
@@ -165,15 +170,17 @@ export default function NoticeDetailScreen({ navigation, route }) {
           <View style={styles.contentContainer}>
             {/* Notice Header */}
             <View style={styles.noticeHeader}>
-              <View style={[styles.iconContainer, { backgroundColor: notice.iconColor }]}> 
-                {(notice.company.includes('인크루트')) ? (
+              <View style={[styles.iconContainer, { backgroundColor: notice.iconColor }]}>
+                {(notice.company.includes('카카오톡')) ? (
+                  <Image source={require('../assets/icons/organizations/kakaotalk.png')} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="contain" />
+                ) : (notice.company.includes('인크루트')) ? (
                   <Image source={require('../assets/icons/organizations/incruit.png')} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="contain" />
                 ) : (notice.company.includes('알바몬')) ? (
                   <Image source={require('../assets/icons/organizations/albamon.png')} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="contain" />
                 ) : (notice.company.includes('SKT')) ? (
                   <Image source={require('../assets/icons/organizations/skt.png')} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="contain" />
                 ) : (
-                  <Text style={styles.iconText}>{notice.icon}</Text>
+                <Text style={styles.iconText}>{notice.icon}</Text>
                 )}
               </View>
               <View style={styles.headerInfo}>
@@ -186,6 +193,22 @@ export default function NoticeDetailScreen({ navigation, route }) {
             {/* Notice Content */}
             <View style={styles.contentBox}>
               <Text style={styles.contentText}>{notice.content}</Text>
+              {notice.id === 1 && notice.company === '카카오톡' && (
+                <TouchableOpacity
+                  style={styles.withdrawalButton}
+                  onPress={() => {
+                    navigation.navigate('기관', {
+                      screen: 'OrgDetail',
+                      params: { 
+                        orgName: '카카오톡',
+                        initialTab: 'consent'
+                      }
+                    });
+                  }}
+                >
+                  <Text style={styles.withdrawalButtonText}>→ 동의 철회 바로가기</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </ScrollView>
@@ -294,5 +317,18 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: '#6B7280',
+  },
+  withdrawalButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#00752F',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  withdrawalButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
