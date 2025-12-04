@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // 실제 기기에서 테스트하려면 아래 USE_REAL_DEVICE를 true로 변경하고
 // DEVICE_IP를 컴퓨터의 실제 IP 주소로 설정하세요
 const USE_REAL_DEVICE = true; // 실제 기기 사용 시 true로 변경
-const DEVICE_IP = '192.168.0.9'; // 실제 기기 테스트 시 사용할 IP 주소
+const DEVICE_IP = '192.168.0.10'; // 실제 기기 테스트 시 사용할 IP 주소
 
 const getBaseURL = () => {
   // 실제 기기에서 테스트하는 경우

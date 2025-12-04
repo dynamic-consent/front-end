@@ -52,12 +52,12 @@ const getCompanyColor = (category) => {
 const notices = [
   {
     id: 1,
-    date: '25.07.18',
-    company: '인크루트',
-    title: '개인정보 처리 방침 개정 안내',
-    description: '안녕하세요, 인크루트입니다. 항상 인크루트를 이용해 주시...',
-    icon: '인',
-    iconColor: '#FF9800'
+    date: '25.11.12',
+    company: '카카오톡',
+    title: '[개인정보 공지] 카카오톡 친구위치 기능 업데이트 - 무제한 위치공유 확대에 따른 주의사항',
+    description: '안녕하세요, 동의 ON입니다. 카카오는 2025년 11월 12일 카카오톡과 카카오맵에서 친구위치 기능을 개편했습니다...',
+    icon: '톡',
+    iconColor: '#FEE500'
   },
   {
     id: 2,
@@ -81,6 +81,9 @@ const notices = [
 
 function NoticeItem({ item, onPress, isLast }) {
   const getCompanyImage = (company) => {
+    if (company.includes('카카오톡')) {
+      return require('../assets/icons/organizations/kakaotalk.png');
+    }
     if (company.includes('인크루트')) {
       return require('../assets/icons/organizations/incruit.png');
     }
@@ -129,12 +132,12 @@ export default function NoticeScreen({ navigation }) {
   const defaultNotices = [
     {
       id: 1,
-      date: '25.07.18',
-      company: '인크루트',
-      title: '개인정보 처리 방침 개정 안내',
-      description: '안녕하세요, 인크루트입니다. 항상 인크루트를 이용해 주시...',
-      icon: '인',
-      iconColor: '#FF9800'
+      date: '25.11.12',
+      company: '카카오톡',
+      title: '[개인정보 공지] 카카오톡 친구위치 기능 업데이트 - 무제한 위치공유 확대에 따른 주의사항',
+      description: '안녕하세요, 동의 ON입니다. 카카오는 2025년 11월 12일 카카오톡과 카카오맵에서 친구위치 기능을 개편했습니다...',
+      icon: '톡',
+      iconColor: '#FEE500'
     },
     {
       id: 2,
